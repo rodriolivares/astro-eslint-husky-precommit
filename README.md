@@ -1,47 +1,180 @@
-# Astro Starter Kit: Minimal
+# Astro Project with ESLint, Husky, and Lint-Staged
 
-```sh
-npm create astro@latest -- --template minimal
+This project is initialized using [Astro](https://astro.build/) with [ESLint](https://eslint.org/), [ESLint configuration for Astro files](https://ota-meshi.github.io/eslint-plugin-astro/), [Husky](https://typicode.github.io/husky/) for Git hooks, and [lint-staged](https://www.npmjs.com/package/lint-staged) for pre-commit checks.
+
+This `README.md` covers all the necessary steps to set up the project and provides clarity on the configurations involved. Feel free to adjust it based on your preferences.
+
+## Project Setup
+
+### 1. Install Astro
+
+Run the following command to create a new Astro project:
+
+```bash
+npm create astro@latest
 ```
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/minimal)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/minimal)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/minimal/devcontainer.json)
+Choose:
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+-  Empty template
+-  No TypeScript
+-  Install deps
+-  Initialize GIT repository
 
-## 🚀 Project Structure
+### 2. Install and Configure ESLint
 
-Inside of your Astro project, you'll see the following folders and files:
+Run the following command to set up ESLint:
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+```bash
+npm init @eslint/config@latest
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+Choose:
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+-  Validate Syntax and problems
+-  ESM
+-  No React or Vue
+-  No TypeScript
+-  Code runs on Browser
 
-Any static assets, like images, can be placed in the `public/` directory.
+### 3. Add ESLint Configuration
 
-## 🧞 Commands
+In eslint.config.js, add the following:
 
-All commands are run from the root of the project, from a terminal:
+```javascript
+export default [
+	// Existing config...
+	{
+		files: ["**/*.js", "**/*.ts", "**/*.astro"],
+		ignores: [
+			"**/node_modules/**",
+			"**/dist/**",
+			"**/public/**",
+			"**/build/**",
+		],
+	},
+];
+```
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+### 4. Install ESLint for Astro
 
-## 👀 Want to learn more?
+```bash
+npm install --save-dev eslint-plugin-astro eslint-plugin-jsx-a11y --force
+```
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+### 5. Add to eslint.config.js:
+
+```javascript
+import eslintPluginAstro from "eslint-plugin-astro";
+
+export default [
+	// Existing config...
+
+	...eslintPluginAstro.configs.recommended,
+	...eslintPluginAstro.configs["jsx-a11y-recommended"],
+];
+```
+
+### 6. Test ESLint Setup
+
+To check if ESLint is working, you can add the following rule in eslint.config.js:
+
+```json
+{
+	"rules": {
+		"no-console": "error"
+	}
+}
+```
+
+Add a console.log to a file like index.astro and run:
+
+```bash
+npx eslint .\src\pages\index.astro
+```
+
+It should return a no-console error.
+
+### 7. Install Husky for Git Hooks
+
+Install Husky:
+
+```bash
+npm install --save-dev husky --force
+```
+
+Add the following script in package.json to prepare the project:
+
+```json
+{
+	"scripts": {
+		"prepare": "husky install"
+	}
+}
+```
+
+Run this to init and config ./husky
+
+```bash
+npm run prepare
+```
+
+### 8. Install lint-staged for Pre-Commit Hook
+
+Install lint-staged:
+
+```bash
+npm install --save-dev lint-staged --force
+```
+
+Add the following text to .husky/pre-commit:
+
+```
+npx lint-staged
+```
+
+### 9. Configure lint-staged in package.json
+
+```json
+{
+	"lint-staged": {
+		"*.astro": "eslint --fix",
+		"*.{js,ts}": "eslint --fix"
+	}
+}
+```
+
+Now, when you try to commit files, the pre-commit hook will automatically validate ESLint rules.
+
+If you try to commit code that violates the ESLint rules (e.g. console.log), the commit will be blocked with an error like this:
+
+```bash
+⚠ Skipping backup because there’s no initial commit yet.
+
+[STARTED] Preparing lint-staged...
+[COMPLETED] Preparing lint-staged...
+[STARTED] Hiding unstaged changes to partially staged files...
+[COMPLETED] Hiding unstaged changes to partially staged files...
+[STARTED] Running tasks for staged files...
+[STARTED] package.json — 13 files
+[STARTED] *.{js,ts,astro} — 3 files
+[STARTED] eslint
+[FAILED] eslint [FAILED]
+[FAILED] eslint [FAILED]
+[COMPLETED] Running tasks for staged files...
+[STARTED] Applying modifications from tasks...
+[COMPLETED] Applying modifications from tasks...
+[STARTED] Restoring unstaged changes to partially staged files...
+[SKIPPED]
+✖ eslint:
+
+C:\path\index.astro
+  2:1  error  Unexpected console statement  no-console
+
+✖ 1 problem (1 error, 0 warnings)
+
+ Skipped because of errors from tasks.
+husky - pre-commit script failed (code 1)
+```
+
+and cancels the commit.
